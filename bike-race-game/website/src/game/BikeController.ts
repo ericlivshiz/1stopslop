@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BIKE_GEOMETRY } from "./bike-geometry";
-import { nextIdleLinearSpeed, nextWheelSpeed } from "./bike-motion";
+import { nextBikeAngularVelocity, nextIdleLinearSpeed, nextWheelSpeed } from "./bike-motion";
 import { worldPointFromBike } from "./bike-pose";
 import type { ControlState } from "./input";
 import type { CheckpointDefinition } from "./track";
@@ -53,10 +53,10 @@ export class BikeController {
       });
     }
 
-    const rotation = Number(this.controls.rotateForward) - Number(this.controls.rotateBack);
+    const rotation = (Number(this.controls.rotateForward) - Number(this.controls.rotateBack)) as -1 | 0 | 1;
     if (rotation !== 0) {
       const angularVelocity = (this.chassis.body as MatterJS.BodyType).angularVelocity;
-      this.chassis.setAngularVelocity(Phaser.Math.Clamp(angularVelocity + rotation * 0.012, -0.12, 0.12));
+      this.chassis.setAngularVelocity(nextBikeAngularVelocity(angularVelocity, rotation));
     }
   }
 
