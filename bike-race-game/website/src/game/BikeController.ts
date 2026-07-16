@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { BIKE_GEOMETRY } from "./bike-geometry";
 import type { ControlState } from "./input";
 import type { CheckpointDefinition } from "./track";
 
@@ -11,9 +12,9 @@ export class BikeController {
   private controls: ControlState = { forward: false, backward: false, rotateBack: false, rotateForward: false };
 
   constructor(private scene: Phaser.Scene, spawn: CheckpointDefinition) {
-    this.rearWheel = scene.matter.add.image(spawn.x - 43, spawn.y + 25, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(23).setDepth(9);
-    this.frontWheel = scene.matter.add.image(spawn.x + 43, spawn.y + 25, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(23).setDepth(9);
-    this.chassis = scene.matter.add.image(spawn.x, spawn.y, "bike", undefined, { frictionAir: 0.018 }).setBody({ type: "rectangle", width: 92, height: 34 }).setDepth(10);
+    this.rearWheel = scene.matter.add.image(spawn.x - BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
+    this.frontWheel = scene.matter.add.image(spawn.x + BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
+    this.chassis = scene.matter.add.image(spawn.x, spawn.y, "bike", undefined, { frictionAir: 0.018 }).setBody({ type: "rectangle", width: 92, height: BIKE_GEOMETRY.chassisHeight }).setDepth(10);
     this.rider = scene.matter.add.image(spawn.x - 4, spawn.y - 38, "rider-body", undefined, { frictionAir: 0.02 }).setBody({ type: "rectangle", width: 27, height: 47 }).setDepth(11);
     this.head = scene.matter.add.image(spawn.x - 8, spawn.y - 76, "rider-head", undefined, { frictionAir: 0.02 }).setCircle(17).setDepth(12);
 
@@ -23,8 +24,8 @@ export class BikeController {
     this.setLabel(this.rider, "rider");
     this.setLabel(this.head, "rider-head");
 
-    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.rearWheel.body as MatterJS.BodyType, 47, 0.75, { pointA: { x: -39, y: 14 }, damping: 0.16 });
-    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.frontWheel.body as MatterJS.BodyType, 47, 0.75, { pointA: { x: 39, y: 14 }, damping: 0.16 });
+    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.rearWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.suspensionLength, 0.75, { pointA: { x: BIKE_GEOMETRY.rearAnchorX, y: BIKE_GEOMETRY.suspensionAnchorY }, damping: 0.16 });
+    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.frontWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.suspensionLength, 0.75, { pointA: { x: BIKE_GEOMETRY.frontAnchorX, y: BIKE_GEOMETRY.suspensionAnchorY }, damping: 0.16 });
     scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.rider.body as MatterJS.BodyType, 0, 0.92, { pointA: { x: -4, y: -19 }, pointB: { x: 0, y: 22 } });
     scene.matter.add.constraint(this.rider.body as MatterJS.BodyType, this.head.body as MatterJS.BodyType, 0, 0.95, { pointA: { x: 0, y: -25 }, pointB: { x: 0, y: 15 } });
 
@@ -62,8 +63,8 @@ export class BikeController {
     });
     const placements = [
       [this.chassis, position(0, 0)],
-      [this.rearWheel, position(-43, 25)],
-      [this.frontWheel, position(43, 25)],
+      [this.rearWheel, position(-BIKE_GEOMETRY.wheelOffsetX, BIKE_GEOMETRY.wheelOffsetY)],
+      [this.frontWheel, position(BIKE_GEOMETRY.wheelOffsetX, BIKE_GEOMETRY.wheelOffsetY)],
       [this.rider, position(-4, -38)],
       [this.head, position(-8, -76)],
     ] as const;
