@@ -57,8 +57,9 @@ export class RaceScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number) {
+    this.bike.syncVisuals();
+    this.bike.update();
     if (this.race.status === "running") {
-      this.bike.update();
       const elapsed = elapsedRaceTime(this.race, performance.now());
       const second = Math.floor(elapsed / 100);
       if (second !== this.lastPublishedSecond) {
@@ -76,7 +77,10 @@ export class RaceScene extends Phaser.Scene {
   private handleCollision(event: Phaser.Physics.Matter.Events.CollisionStartEvent) {
     event.pairs.forEach(({ bodyA, bodyB }) => {
       const labels = [bodyA.label, bodyB.label];
-      if (labels.includes("rider-head") && labels.includes("track")) this.crash();
+      if (labels.includes("bike") && labels.includes("track")) {
+        const angle = Math.abs(Phaser.Math.Angle.Wrap(this.bike.chassis.rotation));
+        if (angle > 1.65) this.crash();
+      }
 
       const sensor = labels.find((label) => label.startsWith("checkpoint:"));
       if (sensor && labels.some((label) => label.startsWith("bike"))) {

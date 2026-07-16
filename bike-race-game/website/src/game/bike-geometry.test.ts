@@ -12,4 +12,8 @@ describe("bike geometry", () => {
     const chassisBottom = BIKE_GEOMETRY.chassisHeight / 2;
     expect(wheelBottom - chassisBottom).toBeGreaterThan(25);
   });
+
+  it("uses a negative collision group so constrained bike parts cannot collide", () => {
+    expect(BIKE_GEOMETRY.collisionGroup).toBeLessThan(0);
+  });
 });

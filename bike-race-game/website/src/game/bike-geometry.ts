@@ -11,6 +11,7 @@ export const BIKE_GEOMETRY = {
   rearAnchorX: -SUSPENSION_ANCHOR_X,
   frontAnchorX: SUSPENSION_ANCHOR_X,
   suspensionAnchorY: SUSPENSION_ANCHOR_Y,
+  collisionGroup: -1,
   suspensionLength: Math.hypot(
     WHEEL_OFFSET_X - SUSPENSION_ANCHOR_X,
     WHEEL_OFFSET_Y - SUSPENSION_ANCHOR_Y,
