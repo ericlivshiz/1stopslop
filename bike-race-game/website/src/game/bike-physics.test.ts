@@ -1,7 +1,7 @@
 import Matter from "matter-js";
 import { describe, expect, it } from "vitest";
 import { BIKE_GEOMETRY } from "./bike-geometry";
-import { nextIdleLinearSpeed, nextWheelSpeed } from "./bike-motion";
+import { DEFAULT_DRIVE_TUNING, driveForce, nextIdleLinearSpeed, nextThrottle } from "./bike-motion";
 
 function createBikeWorld(groundAngle = 0) {
   const engine = Matter.Engine.create({ positionIterations: 10, velocityIterations: 8 });
@@ -50,7 +50,9 @@ function createBikeWorld(groundAngle = 0) {
 
 function stepBike(direction: -1 | 0 | 1, frames = 240) {
   const bike = createBikeWorld();
+  let throttle = 0;
   for (let frame = 0; frame < frames; frame += 1) {
+    throttle = nextThrottle(throttle, direction, 1 / 60, DEFAULT_DRIVE_TUNING.throttleRampSeconds);
     if (direction === 0) {
       for (const body of [bike.chassis, bike.rearWheel, bike.frontWheel]) {
         Matter.Body.setVelocity(body, {
@@ -58,13 +60,11 @@ function stepBike(direction: -1 | 0 | 1, frames = 240) {
           y: body.velocity.y,
         });
       }
-      Matter.Body.setAngularVelocity(bike.rearWheel, nextWheelSpeed(bike.rearWheel.angularVelocity, 0));
-      Matter.Body.setAngularVelocity(bike.frontWheel, nextWheelSpeed(bike.frontWheel.angularVelocity, 0));
     } else {
-      Matter.Body.setAngularVelocity(
-        bike.rearWheel,
-        nextWheelSpeed(bike.rearWheel.angularVelocity, direction),
-      );
+      Matter.Body.applyForce(bike.rearWheel, bike.rearWheel.position, {
+        x: driveForce(bike.chassis.velocity.x, throttle),
+        y: 0,
+      });
     }
     Matter.Engine.update(bike.engine, 1000 / 60);
   }
@@ -73,11 +73,13 @@ function stepBike(direction: -1 | 0 | 1, frames = 240) {
 
 function driveThenCoast() {
   const bike = createBikeWorld();
+  let throttle = 0;
   for (let frame = 0; frame < 120; frame += 1) {
-    Matter.Body.setAngularVelocity(
-      bike.rearWheel,
-      nextWheelSpeed(bike.rearWheel.angularVelocity, 1),
-    );
+    throttle = nextThrottle(throttle, 1, 1 / 60, DEFAULT_DRIVE_TUNING.throttleRampSeconds);
+    Matter.Body.applyForce(bike.rearWheel, bike.rearWheel.position, {
+      x: driveForce(bike.chassis.velocity.x, throttle),
+      y: 0,
+    });
     Matter.Engine.update(bike.engine, 1000 / 60);
   }
   const releaseX = bike.chassis.position.x;
@@ -106,7 +108,8 @@ describe("complete bike physics", () => {
 
   it("drives smoothly forward without flipping", () => {
     const bike = stepBike(1);
-    expect(bike.chassis.position.x).toBeGreaterThan(100);
+    expect(bike.chassis.position.x).toBeGreaterThan(650);
+    expect(bike.chassis.velocity.x).toBeGreaterThan(8);
     expect(Math.abs(bike.chassis.angle)).toBeLessThan(0.15);
   });
 
@@ -126,11 +129,13 @@ describe("complete bike physics", () => {
     const angle = -0.12;
     const bike = createBikeWorld(angle);
     const start = { ...bike.chassis.position };
+    let throttle = 0;
     for (let frame = 0; frame < 240; frame += 1) {
-      Matter.Body.setAngularVelocity(
-        bike.rearWheel,
-        nextWheelSpeed(bike.rearWheel.angularVelocity, 1),
-      );
+      throttle = nextThrottle(throttle, 1, 1 / 60, DEFAULT_DRIVE_TUNING.throttleRampSeconds);
+      Matter.Body.applyForce(bike.rearWheel, bike.rearWheel.position, {
+        x: driveForce(bike.chassis.velocity.x, throttle),
+        y: 0,
+      });
       Matter.Engine.update(bike.engine, 1000 / 60);
     }
     const displacement = Matter.Vector.dot(
@@ -139,5 +144,32 @@ describe("complete bike physics", () => {
     );
     expect(displacement).toBeGreaterThan(100);
     expect(Math.abs(bike.chassis.angle - angle)).toBeLessThan(0.2);
+  });
+
+  it.each([1, -1] as const)("holding direction %i beats rapid tapping", (direction) => {
+    const held = createBikeWorld();
+    const tapped = createBikeWorld();
+    let heldThrottle = 0;
+    let tappedThrottle = 0;
+    for (let frame = 0; frame < 240; frame += 1) {
+      heldThrottle = nextThrottle(heldThrottle, direction, 1 / 60, DEFAULT_DRIVE_TUNING.throttleRampSeconds);
+      const tappedDirection = frame % 6 < 3 ? direction : 0;
+      tappedThrottle = nextThrottle(tappedThrottle, tappedDirection, 1 / 60, DEFAULT_DRIVE_TUNING.throttleRampSeconds);
+      Matter.Body.applyForce(held.rearWheel, held.rearWheel.position, {
+        x: driveForce(held.chassis.velocity.x, heldThrottle),
+        y: 0,
+      });
+      if (tappedThrottle !== 0) {
+        Matter.Body.applyForce(tapped.rearWheel, tapped.rearWheel.position, {
+          x: driveForce(tapped.chassis.velocity.x, tappedThrottle),
+          y: 0,
+        });
+      }
+      Matter.Engine.update(held.engine, 1000 / 60);
+      Matter.Engine.update(tapped.engine, 1000 / 60);
+    }
+    const heldTravel = Math.abs(held.chassis.position.x);
+    const tappedTravel = Math.abs(tapped.chassis.position.x);
+    expect(heldTravel).toBeGreaterThan(tappedTravel * 1.25);
   });
 });

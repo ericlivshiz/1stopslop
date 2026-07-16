@@ -1,11 +1,14 @@
 import type { ControlState } from "./input";
 import type { RaceSnapshot } from "./race-state";
+import { DEFAULT_DRIVE_TUNING, type DriveTuning } from "./bike-motion";
 
 type Unsubscribe = () => void;
 
 const controlListeners = new Set<(state: ControlState) => void>();
 const restartListeners = new Set<() => void>();
 const snapshotListeners = new Set<(snapshot: RaceSnapshot) => void>();
+const tuningListeners = new Set<(tuning: DriveTuning) => void>();
+let driveTuning = DEFAULT_DRIVE_TUNING;
 
 function subscribe<T>(listeners: Set<(value: T) => void>, listener: (value: T) => void): Unsubscribe {
   listeners.add(listener);
@@ -13,6 +16,16 @@ function subscribe<T>(listeners: Set<(value: T) => void>, listener: (value: T) =
 }
 
 export const gameEvents = {
+  getDriveTuning() {
+    return driveTuning;
+  },
+  setDriveTuning(tuning: DriveTuning) {
+    driveTuning = tuning;
+    tuningListeners.forEach((listener) => listener(tuning));
+  },
+  onDriveTuning(listener: (tuning: DriveTuning) => void) {
+    return subscribe(tuningListeners, listener);
+  },
   setControls(state: ControlState) {
     controlListeners.forEach((listener) => listener(state));
   },

@@ -8,11 +8,16 @@ import { createRaceState, type RaceSnapshot } from "../game/race-state";
 import { GameCanvas } from "./GameCanvas";
 import { RaceHud } from "./RaceHud";
 import { TouchControls } from "./TouchControls";
+import { DEFAULT_DRIVE_TUNING, type DriveTuning } from "../game/bike-motion";
 
-export function RaceGame() {
+export function RaceGame({ tuning = DEFAULT_DRIVE_TUNING }: { tuning?: DriveTuning }) {
   const [race, setRace] = useState<RaceSnapshot>(createRaceState);
   const [bestTime, setBestTime] = useState<number | null>(null);
   const controlsRef = useRef<ControlState>(createControlState());
+
+  useEffect(() => {
+    gameEvents.setDriveTuning(tuning);
+  }, [tuning]);
 
   const updateControl = useCallback((action: ControlAction, pressed: boolean) => {
     controlsRef.current = setControlAction(controlsRef.current, action, pressed);

@@ -34,6 +34,7 @@ export class RaceScene extends Phaser.Scene {
     this.drawBackdrop();
     new TrackBuilder(this, CANYON_TRACK).build();
     this.bike = new BikeController(this, CANYON_TRACK.spawns[0]);
+    this.bike.setTuning(gameEvents.getDriveTuning());
     const cameraLead = this.scale.width < 600 ? 0 : -180;
     const cameraLift = this.scale.height < 500 ? 0 : 80;
     if (this.scale.height < 500) this.cameras.main.setZoom(0.82);
@@ -50,6 +51,7 @@ export class RaceScene extends Phaser.Scene {
       }
     }));
     this.cleanup.push(gameEvents.onRestart(() => this.restart()));
+    this.cleanup.push(gameEvents.onDriveTuning((tuning) => this.bike.setTuning(tuning)));
     this.matter.world.on("collisionstart", this.handleCollision, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.shutdown, this);
     document.addEventListener("visibilitychange", this.handleVisibility);
@@ -58,7 +60,7 @@ export class RaceScene extends Phaser.Scene {
 
   update(_time: number, delta: number) {
     this.bike.syncVisuals();
-    this.bike.update();
+    this.bike.update(delta);
     if (this.race.status === "running") {
       const elapsed = elapsedRaceTime(this.race, performance.now());
       const second = Math.floor(elapsed / 100);

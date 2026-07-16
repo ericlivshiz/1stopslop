@@ -20,7 +20,7 @@ describe("bike geometry", () => {
   });
 
   it("uses moderate tire friction for traction without sticky rolling", () => {
-    expect(BIKE_GEOMETRY.tireFriction).toBeGreaterThanOrEqual(0.4);
-    expect(BIKE_GEOMETRY.tireFriction).toBeLessThanOrEqual(0.8);
+    expect(BIKE_GEOMETRY.tireFriction).toBeGreaterThanOrEqual(0.8);
+    expect(BIKE_GEOMETRY.tireFriction).toBeLessThanOrEqual(1.1);
   });
 });

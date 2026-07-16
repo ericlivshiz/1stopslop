@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BIKE_GEOMETRY } from "./bike-geometry";
-import { nextBikeAngularVelocity, nextIdleLinearSpeed, nextWheelSpeed } from "./bike-motion";
+import { DEFAULT_DRIVE_TUNING, driveForce, nextBikeAngularVelocity, nextIdleLinearSpeed, nextThrottle, type DriveTuning } from "./bike-motion";
 import { worldPointFromBike } from "./bike-pose";
 import type { ControlState } from "./input";
 import type { CheckpointDefinition } from "./track";
@@ -12,6 +12,8 @@ export class BikeController {
   private rider: Phaser.GameObjects.Image;
   private head: Phaser.GameObjects.Image;
   private controls: ControlState = { forward: false, backward: false, rotateBack: false, rotateForward: false };
+  private tuning: DriveTuning = DEFAULT_DRIVE_TUNING;
+  private throttle = 0;
 
   constructor(private scene: Phaser.Scene, spawn: CheckpointDefinition) {
     this.rearWheel = scene.matter.add.image(spawn.x - BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: BIKE_GEOMETRY.tireFriction }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
@@ -38,15 +40,17 @@ export class BikeController {
     this.controls = controls;
   }
 
-  update() {
+  setTuning(tuning: DriveTuning) {
+    this.tuning = tuning;
+  }
+
+  update(deltaMs = 1000 / 60) {
     const direction = (Number(this.controls.forward) - Number(this.controls.backward)) as -1 | 0 | 1;
-    const rearSpeed = (this.rearWheel.body as MatterJS.BodyType).angularVelocity;
-    if (direction !== 0) {
-      this.rearWheel.setAngularVelocity(nextWheelSpeed(rearSpeed, direction));
+    this.throttle = nextThrottle(this.throttle, direction, deltaMs / 1000, this.tuning.throttleRampSeconds);
+    if (this.throttle !== 0) {
+      const speed = (this.chassis.body as MatterJS.BodyType).velocity.x;
+      this.rearWheel.applyForce(new Phaser.Math.Vector2(driveForce(speed, this.throttle, this.tuning), 0));
     } else {
-      const frontSpeed = (this.frontWheel.body as MatterJS.BodyType).angularVelocity;
-      this.rearWheel.setAngularVelocity(nextWheelSpeed(rearSpeed, 0));
-      this.frontWheel.setAngularVelocity(nextWheelSpeed(frontSpeed, 0));
       [this.chassis, this.rearWheel, this.frontWheel].forEach((part) => {
         const velocity = (part.body as MatterJS.BodyType).velocity;
         part.setVelocity(nextIdleLinearSpeed(velocity.x, velocity.y), velocity.y);
@@ -56,7 +60,7 @@ export class BikeController {
     const rotation = (Number(this.controls.rotateForward) - Number(this.controls.rotateBack)) as -1 | 0 | 1;
     if (rotation !== 0) {
       const angularVelocity = (this.chassis.body as MatterJS.BodyType).angularVelocity;
-      this.chassis.setAngularVelocity(nextBikeAngularVelocity(angularVelocity, rotation));
+      this.chassis.setAngularVelocity(nextBikeAngularVelocity(angularVelocity, rotation, this.tuning));
     }
   }
 
@@ -83,6 +87,7 @@ export class BikeController {
     placements.forEach(([part, point]) => {
       part.setPosition(point.x, point.y).setRotation(spawn.angle).setVelocity(0, 0).setAngularVelocity(0);
     });
+    this.throttle = 0;
     this.syncVisuals();
   }
 
