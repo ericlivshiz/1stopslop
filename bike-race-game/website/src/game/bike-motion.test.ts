@@ -8,10 +8,8 @@ describe("bike motor response", () => {
     expect(firstFrame).toBeLessThan(0.15);
   });
 
-  it("settles completely when no input is pressed", () => {
-    let speed = 0.12;
-    for (let frame = 0; frame < 90; frame += 1) speed = nextWheelSpeed(speed, 0);
-    expect(speed).toBe(0);
+  it("does not apply a synthetic wheel brake when input is released", () => {
+    expect(nextWheelSpeed(0.12, 0)).toBe(0.12);
   });
 
   it("caps sustained acceleration at five times the original speed", () => {
@@ -20,8 +18,8 @@ describe("bike motor response", () => {
     expect(speed).toBeCloseTo(0.7, 3);
   });
 
-  it("settles grounded horizontal drift without braking in the air", () => {
-    expect(nextIdleLinearSpeed(0.008, 0.1)).toBe(0);
+  it("preserves horizontal momentum on the ground and in the air", () => {
+    expect(nextIdleLinearSpeed(0.008, 0.1)).toBe(0.008);
     expect(nextIdleLinearSpeed(2, 1.2)).toBe(2);
   });
 });

@@ -18,4 +18,9 @@ describe("bike geometry", () => {
   it("uses a negative collision group so constrained bike parts cannot collide", () => {
     expect(BIKE_GEOMETRY.collisionGroup).toBeLessThan(0);
   });
+
+  it("uses moderate tire friction for traction without sticky rolling", () => {
+    expect(BIKE_GEOMETRY.tireFriction).toBeGreaterThanOrEqual(0.4);
+    expect(BIKE_GEOMETRY.tireFriction).toBeLessThanOrEqual(0.8);
+  });
 });

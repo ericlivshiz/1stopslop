@@ -14,8 +14,8 @@ export class BikeController {
   private controls: ControlState = { forward: false, backward: false, rotateBack: false, rotateForward: false };
 
   constructor(private scene: Phaser.Scene, spawn: CheckpointDefinition) {
-    this.rearWheel = scene.matter.add.image(spawn.x - BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
-    this.frontWheel = scene.matter.add.image(spawn.x + BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: 1.2 }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
+    this.rearWheel = scene.matter.add.image(spawn.x - BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: BIKE_GEOMETRY.tireFriction }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
+    this.frontWheel = scene.matter.add.image(spawn.x + BIKE_GEOMETRY.wheelOffsetX, spawn.y + BIKE_GEOMETRY.wheelOffsetY, "wheel", undefined, { restitution: 0.05, friction: BIKE_GEOMETRY.tireFriction }).setCircle(BIKE_GEOMETRY.wheelRadius).setDepth(9);
     this.chassis = scene.matter.add.image(spawn.x, spawn.y, "bike", undefined, { frictionAir: 0.018 }).setBody({ type: "rectangle", width: 92, height: BIKE_GEOMETRY.chassisHeight }).setDepth(10);
     this.rider = scene.add.image(spawn.x - 4, spawn.y - 38, "rider-body").setDepth(11);
     this.head = scene.add.image(spawn.x - 8, spawn.y - 76, "rider-head").setDepth(12);
