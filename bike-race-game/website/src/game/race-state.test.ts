@@ -5,7 +5,9 @@ import {
   createRaceState,
   finishRace,
   restartRace,
+  resumeRace,
   startRace,
+  suspendRace,
 } from "./race-state";
 
 describe("race state", () => {
@@ -28,5 +30,12 @@ describe("race state", () => {
   it("never moves a checkpoint backward", () => {
     const running = startRace(createRaceState(), 100);
     expect(advanceCheckpoint(advanceCheckpoint(running, 3), 1).checkpoint).toBe(3);
+  });
+
+  it("does not count time while suspended", () => {
+    const running = startRace(createRaceState(), 1_000);
+    const suspended = suspendRace(running, 3_000);
+    const resumed = resumeRace(suspended, 8_000);
+    expect(finishRace(resumed, 10_000).elapsedMs).toBe(4_000);
   });
 });

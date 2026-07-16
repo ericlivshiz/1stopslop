@@ -46,6 +46,16 @@ export function finishRace(state: RaceSnapshot, now: number): RaceSnapshot {
   return { ...state, status: "finished", elapsedMs: elapsedAt(state, now), startedAt: null };
 }
 
+export function suspendRace(state: RaceSnapshot, now: number): RaceSnapshot {
+  if (state.status !== "running" || state.startedAt === null) return state;
+  return { ...state, elapsedMs: elapsedAt(state, now), startedAt: null };
+}
+
+export function resumeRace(state: RaceSnapshot, now: number): RaceSnapshot {
+  if (state.status !== "running" || state.startedAt !== null) return state;
+  return { ...state, startedAt: now - state.elapsedMs };
+}
+
 export function elapsedRaceTime(state: RaceSnapshot, now: number): number {
   return state.status === "running" ? elapsedAt(state, now) : state.elapsedMs;
 }

@@ -14,7 +14,8 @@ export function setControlAction(
   return { ...state, [action]: pressed };
 }
 
-export function clearControls(_state?: ControlState): ControlState {
+export function clearControls(state?: ControlState): ControlState {
+  void state;
   return createControlState();
 }
 
