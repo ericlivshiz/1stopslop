@@ -29,8 +29,8 @@ export class BikeController {
       }
     });
 
-    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.rearWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.suspensionLength, 0.75, { pointA: { x: BIKE_GEOMETRY.rearAnchorX, y: BIKE_GEOMETRY.suspensionAnchorY }, damping: 0.16 });
-    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.frontWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.suspensionLength, 0.75, { pointA: { x: BIKE_GEOMETRY.frontAnchorX, y: BIKE_GEOMETRY.suspensionAnchorY }, damping: 0.16 });
+    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.rearWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.axleConstraintLength, 1, { pointA: { x: BIKE_GEOMETRY.rearAxleX, y: BIKE_GEOMETRY.axleY }, damping: 0.2 });
+    scene.matter.add.constraint(this.chassis.body as MatterJS.BodyType, this.frontWheel.body as MatterJS.BodyType, BIKE_GEOMETRY.axleConstraintLength, 1, { pointA: { x: BIKE_GEOMETRY.frontAxleX, y: BIKE_GEOMETRY.axleY }, damping: 0.2 });
     this.respawn(spawn);
   }
 

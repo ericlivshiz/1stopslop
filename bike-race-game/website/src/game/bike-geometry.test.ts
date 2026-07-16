@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { BIKE_GEOMETRY, suspensionDistanceAtSpawn } from "./bike-geometry";
+import { BIKE_GEOMETRY } from "./bike-geometry";
 
 describe("bike geometry", () => {
-  it("starts both wheels at their suspension rest length", () => {
-    expect(suspensionDistanceAtSpawn("rear")).toBeCloseTo(BIKE_GEOMETRY.suspensionLength, 5);
-    expect(suspensionDistanceAtSpawn("front")).toBeCloseTo(BIKE_GEOMETRY.suspensionLength, 5);
+  it("mounts both wheel centers directly to fixed chassis axles", () => {
+    expect(BIKE_GEOMETRY.rearAxleX).toBe(-BIKE_GEOMETRY.wheelOffsetX);
+    expect(BIKE_GEOMETRY.frontAxleX).toBe(BIKE_GEOMETRY.wheelOffsetX);
+    expect(BIKE_GEOMETRY.axleY).toBe(BIKE_GEOMETRY.wheelOffsetY);
+    expect(BIKE_GEOMETRY.axleConstraintLength).toBe(0);
   });
 
   it("keeps the chassis above the wheel contact patch", () => {
